@@ -1,80 +1,149 @@
-// Import the 'readline' module to handle terminal input/output
 const readline = require('readline'); 
 
-// Configure the interface: link it to the standard input (keyboard) and output (screen)
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
-  // Define the string that appears before the user types
-  prompt: 'JS-SHELL> ' 
+  prompt: 'JS-SHELL> Add an account: 1 - S&S ISA/GIA, 2 - Workplace Pension, 3 - SIPP, 4 - Cash Savings \nThen enter current amount and monthly contribution (e.g. 1, 10000, 500): ' 
 });
 
-// A standard arrow function; 'name' is the parameter
-// The backticks (`) allow "Template Literals" to inject variables using ${}
-const calc = (principal, contributions, time, bonus = 0) => {
-  // 1. Clean the inputs (removes £ and ,)
-  const clean = (val) => Number(String(val).replace(/[£,]/g, ''));
+let net_worth = [];
+
+// Moved clean function to global scope so the switch statement can use it too
+const clean = (val) => Number(String(val).replace(/[£,]/g, ''));
+
+const balance = () => {
+  let total = 0;
+
+  for (let x = 0; x < net_worth.length; x++) 
+    total += net_worth[x]['principal']
   
-  const p = clean(principal);
-  const c = clean(contributions);
-  const t = Number(time);
-  const b = Number(bonus); // Defaulting to 12 for monthly contributions
+  return `\nCurrent Balance: £${total.toLocaleString()}`
+}
+const growth = () => {
+  let low_total = 0;
+  let total = 0;
+  let high_total = 0;
 
-  const figures = [];
+  
+  for (let x = 0; x < net_worth.length; x++) {
+    // Fixed the object keys to match what is pushed in the switch statement
+    const p = net_worth[x]['principal'];
+    const c = net_worth[x]['contribution'];
+    const t = net_worth[x]['years'];
 
-  // 2. Loop through 0, 0.02, and 0.04 to get 6%, 8%, and 10%
-  // We use curly braces {} to allow the 'let' declaration inside
-  for (let i = 0; i <= 0.04; i += 0.02) {
-    let growth = 1.06 + i;
-    
-    // The compound interest formula for principal + periodic contributions
-    const compoundPrincipal = p * (growth ** t);
-    const compoundSeries = (c * 1+b) * ((growth ** t - 1) / (growth - 1));
-    
-    const total = Math.round(compoundPrincipal + compoundSeries);
-    
-    // 3. Store result with a label for clarity
-    figures.push(`${Math.round((growth-1) * 100)}%: £${total.toLocaleString()}`);
+    if(net_worth[x]['flag'] == 'i'){
+      // Loop through 0, 0.02, and 0.04 to get 6%, 8%, and 10%
+      for (let i = 0; i <= 0.04; i += 0.02) {
+        let growth_rate = 1.06 + i;
+        
+        const compoundPrincipal = p * (growth_rate ** t);
+        const compoundSeries = c * ((growth_rate ** t - 1) / (growth_rate - 1));
+        const finalAmount = Math.round(compoundPrincipal + compoundSeries);
+        
+        // Fixed the decimal checks to look for 0.02 and 0.04. 
+        // Using Math.round to avoid JavaScript's floating point math errors
+        const checkVal = Math.round(i * 100); 
+        
+        if (checkVal === 0) low_total += finalAmount;
+        if (checkVal === 2) total += finalAmount;
+        if (checkVal === 4) high_total += finalAmount;
+      }  
+    }else{
+      //assumes cash grows at 3%
+      const compoundPrincipal = p * (1.03 ** t);
+      const compoundSeries = c * ((1.03 ** t - 1) / (1.03 - 1));
+      const finalAmount = Math.round(compoundPrincipal + compoundSeries);  
+      low_total += finalAmount;
+      total += finalAmount;
+      high_total += finalAmount;    
+    }
   }
 
-  return figures;
+  // Returning a formatted string so you can see all three projections
+  return `\nProjections after 10 years:\n6%: £${low_total.toLocaleString()}\n8%: £${total.toLocaleString()}\n10%: £${high_total.toLocaleString()}\n`;
 };
-// Print an initial message to the user
-console.log("Simple JS Shell started. Type 'exit' to quit.");
 
-// Display the prompt ('JS-SHELL> ') and wait for input
+console.log("Simple JS Shell started. Type 'exit' to quit or 'done' to compute.");
 rl.prompt();
 
-// An event listener: whenever a 'line' (Enter key) is detected, run this block
 rl.on('line', (line) => {
-  // .trim() removes any leading or trailing whitespace from the user's input
   const input = line.trim();
 
-  // Check if the user wants to quit; convert to lowercase to handle 'EXIT' or 'exit'
   if (input.toLowerCase() === 'exit') {
-    rl.close(); // Closes the interface
-    return;     // Stop executing the rest of this function
+    rl.close(); 
+    return;     
   }
 
-  // We use try/catch so the shell doesn't crash if the user types invalid JS
+  if (input.toLowerCase() === 'done') {
+    console.log(balance());
+    console.log(growth());
+    rl.prompt();
+    return; // Stop execution here so it doesn't try to parse 'done' as an account
+  }
+
   try {
-    // eval() takes a string and runs it as actual JavaScript code
-    // The result of the code is stored in the 'result' variable
-    const result = eval(input);
+    const args = input.split(',');
+    const cleanArgs = args.map(arg => arg.trim());
+
+    // Clean the inputs immediately so math operations (* 12) work properly
+    const amount = clean(cleanArgs[1]);
+    const monthlyCont = clean(cleanArgs[2]);
+
+    switch (cleanArgs[0]) {
+      case '1': // gia/s&s isa
+        net_worth.push({
+          'principal': amount,
+          'contribution': monthlyCont * 12,
+          'years': 10,
+          'flag' : 'i'
+        });
+        console.log("Added S&S ISA/GIA.");
+        break; // Added missing break
+      
+      case '2': // wp
+        net_worth.push({
+          'principal': amount,
+          // Assuming the * 2 here is to account for an exact 100% employer match
+          'contribution': monthlyCont * 2 * 12, 
+          'years': 10,   
+          'flag' : 'i'
+        });
+        console.log("Added Workplace Pension.");
+        break; // Added missing break
+      
+      case '3': // sipp
+        net_worth.push({
+          'principal': amount,
+          // 1.25 accounts for basic rate tax relief
+          'contribution': monthlyCont * 1.25 * 12,
+          'years': 10,   
+          'flag' : 'i'
+        });
+        console.log("Added SIPP.");
+        break; // Added missing break
+      
+      case '4':
+        net_worth.push({
+          'principal': amount,
+          'contribution': monthlyCont * 12,
+          'years': 10,    
+          'flag' : 'c' //flag specific to cash so 3 percent growth
+        });
+        console.log("Added Cash Account.");
+        break; // Added missing break
+      
+      default:
+        console.log("Invalid account type. Use 1, 2, 3, or 4.");
+        break;
+    }
     
-    // Log the result of the execution to the console
-    console.log(result);
   } catch (err) {
-    // If the code fails, catch the error and print just the message (not the whole stack trace)
     console.error(`Error: ${err.message}`);
   }
 
-  // After processing the line, show the prompt again for the next command
   rl.prompt();
 
-// Another event listener: triggered when rl.close() is called or Ctrl+C is pressed
 }).on('close', () => {
   console.log('\nExiting shell...');
-  // 0 indicates the process finished successfully without a system-level error
   process.exit(0);
 });

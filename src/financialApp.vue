@@ -15,8 +15,28 @@ const check_bal = computed(() => balance(netWorth.value))
 
 // Helper to translate the type ID to a readable string for the table
 const getAccountName = (type) => {
-  const types = { '1': 'Stocks/Shares', '2': 'Workplace Pension', '3': 'SIPP', '4': 'Cash' }
+  const types = { 
+    '1': 'S&S ISA / GIA', 
+    '2': 'Workplace Pension', 
+    '3': 'SIPP', 
+    '4': 'Cash Savings', 
+    '5': 'Cash LISA',
+    '6': 'Stocks LISA' 
+  }
   return types[type] || 'Unknown'
+}
+
+// This groups them into broad categories for the Pie Chart
+const getAssetClass = (type) => {
+  const classes = {
+    '1': 'Stocks & Shares',
+    '2': 'Pensions',
+    '3': 'Pensions',
+    '4': 'Cash',
+    '5': 'Cash',
+    '6': 'Stocks & Shares'
+  }
+  return classes[type] || 'Other'
 }
 
 const addAccount = () => {
@@ -32,14 +52,15 @@ const addAccount = () => {
   
   //rule of thumb that pension contributions at least double capital
   if (newAccount.value.type === '2') processedCont *= 2
-  //sipp contributions add 25% bonus at least 
-  if (newAccount.value.type === '3') processedCont *= 1.25 
+  //sipp/LISA contributions add 25% bonus at least 
+  if (newAccount.value.type === '3' || newAccount.value.type === '5' || newAccount.value.type === '6') processedCont *= 1.25 
 
-  if (newAccount.value.type === '4') flag = 'c'
+  if (newAccount.value.type === '4' || newAccount.value.type === '5') flag = 'c'
 
   netWorth.value.push({
-    id: Date.now(), // Unique ID for Vue's v-for loop
+    id: Date.now(), 
     typeLabel: getAccountName(newAccount.value.type),
+    assetClass: getAssetClass(newAccount.value.type),
     principal: amount,
     contribution: processedCont,
     years: years_growing,
@@ -53,19 +74,29 @@ const addAccount = () => {
 }
 
 const chartData = computed(() => {
-  // If the ledger is empty, return empty arrays to prevent crashes
   if (netWorth.value.length === 0) {
     return { labels: [], datasets: [{ data: [] }] }
   }
 
+  // 1. Group and sum the principals by their Asset Class
+  const groupedAssets = netWorth.value.reduce((accumulator, asset) => {
+    // If the class (e.g., "Cash") doesn't exist in our totals yet, create it
+    if (!accumulator[asset.assetClass]) {
+      accumulator[asset.assetClass] = 0;
+    }
+    // Add the current asset's principal to that class's total
+    accumulator[asset.assetClass] += asset.principal;
+    
+    return accumulator;
+  }, {}); 
+  // groupedAssets now looks like: { "Cash": 15000, "Pensions": 45000 }
+
+  // 2. Feed the grouped data into the chart
   return {
-    // Extract just the labels (e.g., "S&S ISA", "Cash")
-    labels: netWorth.value.map(asset => asset.typeLabel),
+    labels: Object.keys(groupedAssets), // Extracts ["Cash", "Pensions"]
     datasets: [
       {
-        // Extract just the principal amounts
-        data: netWorth.value.map(asset => asset.principal),
-        // A corporate slate/blue color palette to match your CSS
+        data: Object.values(groupedAssets), // Extracts [15000, 45000]
         backgroundColor: [
           '#2563eb', // Royal Blue
           '#64748b', // Slate
@@ -102,6 +133,8 @@ const chartData = computed(() => {
                 <option value="2">Workplace Pension</option>
                 <option value="3">SIPP</option>
                 <option value="4">Cash ISA or Savings</option>
+                <option value="5">Cash LISA</option>
+                <option value="6">Stocks LISA</option>
               </select>
             </div>
             

@@ -2,7 +2,7 @@
 
 A financial modeling tool built with Vue 3. This application allows users to forecast long-term wealth accumulation across multiple asset types using compound interest formulas.
 
-## 🚀 Features
+## Features
 
 * **Diverse Asset Tracker:** Add and track various financial accounts including S&S ISAs, Workplace Pensions, SIPPs, and Cash Savings.
 * **Real-Time Projections:** Instantly calculates multi-year compound growth across three market scenarios: Pessimistic (6%), Average (8%), and Optimistic (10%).
@@ -44,7 +44,8 @@ Bash
 npm run dev
 Open your browser and navigate to http://localhost:5173. (or terminal prompted port)
 
-Using the Tool
+### Using the Tool
+
 Select an Account Type from the dropdown menu.
 
 Enter your Current Balance and Monthly Contribution.
@@ -53,10 +54,10 @@ Press Enter or click Add to Portfolio.
 
 The application will immediately update your Current Net Worth, redraw the Asset Allocation chart, and calculate your 10-year compound growth projections.
 
-Project Structure
+### Project Structure
 src/financialApp.vue: The main application view and UI layout.
 
 src/useCalculator.js: Extracted mathematical logic for cleaning inputs, calculating total balances, and forecasting compound growth.
 
-License
+### License
 Distributed under the MIT License. See LICENSE for more information.

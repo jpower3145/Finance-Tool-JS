@@ -2,30 +2,39 @@
 import { ref, computed } from 'vue'
 import { clean, growth, balance } from './useCalculator'
 
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
+import { Pie } from 'vue-chartjs'
+
+ChartJS.register(ArcElement, Tooltip, Legend)
+
 const netWorth = ref([])
-const newAccount = ref({ type: '1', principal: '', contribution: '' })
+const newAccount = ref({ type: '1', principal: '', contribution: '', years_growing: '' })
 
 const results = computed(() => growth(netWorth.value))
 const check_bal = computed(() => balance(netWorth.value))
 
 // Helper to translate the type ID to a readable string for the table
 const getAccountName = (type) => {
-  const types = { '1': 'S&S ISA / GIA', '2': 'Workplace Pension', '3': 'SIPP', '4': 'Cash' }
+  const types = { '1': 'Stocks/Shares', '2': 'Workplace Pension', '3': 'SIPP', '4': 'Cash' }
   return types[type] || 'Unknown'
 }
 
 const addAccount = () => {
   const amount = clean(newAccount.value.principal)
   const monthly = clean(newAccount.value.contribution)
+  const years_growing = clean(newAccount.value.years_growing)
   
-  // Validation: Don't add if inputs are completely empty or invalid
+  //check if not everything is entered
   if (!amount && !monthly) return;
 
   let processedCont = monthly * 12
   let flag = 'i'
   
+  //rule of thumb that pension contributions at least double capital
   if (newAccount.value.type === '2') processedCont *= 2
-  if (newAccount.value.type === '3') processedCont *= 1.25
+  //sipp contributions add 25% bonus at least 
+  if (newAccount.value.type === '3') processedCont *= 1.25 
+
   if (newAccount.value.type === '4') flag = 'c'
 
   netWorth.value.push({
@@ -33,20 +42,50 @@ const addAccount = () => {
     typeLabel: getAccountName(newAccount.value.type),
     principal: amount,
     contribution: processedCont,
-    years: 10,
+    years: years_growing,
     flag: flag
   })
 
   newAccount.value.principal = ''
   newAccount.value.contribution = ''
+  newAccount.value.years_growing = ''
+
 }
+
+const chartData = computed(() => {
+  // If the ledger is empty, return empty arrays to prevent crashes
+  if (netWorth.value.length === 0) {
+    return { labels: [], datasets: [{ data: [] }] }
+  }
+
+  return {
+    // Extract just the labels (e.g., "S&S ISA", "Cash")
+    labels: netWorth.value.map(asset => asset.typeLabel),
+    datasets: [
+      {
+        // Extract just the principal amounts
+        data: netWorth.value.map(asset => asset.principal),
+        // A corporate slate/blue color palette to match your CSS
+        backgroundColor: [
+          '#2563eb', // Royal Blue
+          '#64748b', // Slate
+          '#38bdf8', // Light Blue
+          '#0f172a', // Dark Navy
+          '#94a3b8'  // Light Gray
+        ],
+        borderWidth: 1,
+        borderColor: '#ffffff'
+      }
+    ]
+  }
+})
+
 </script>
 
 <template>
   <div class="app-container">
     <header class="app-header">
       <h1>Financial Projections Dashboard</h1>
-      <p class="subtitle">10-Year Compound Growth Modeler</p>
     </header>
     
     <main class="dashboard-grid">
@@ -59,10 +98,10 @@ const addAccount = () => {
             <div class="input-group">
               <label>Account Type</label>
               <select v-model="newAccount.type">
-                <option value="1">S&S ISA or GIA</option>
+                <option value="1">Stocks & Shares ISA or GIA</option>
                 <option value="2">Workplace Pension</option>
                 <option value="3">SIPP</option>
-                <option value="4">Cash</option>
+                <option value="4">Cash ISA or Savings</option>
               </select>
             </div>
             
@@ -82,6 +121,16 @@ const addAccount = () => {
             type="text" 
             v-model="newAccount.contribution" 
             placeholder="0.00" 
+            @keyup.enter="addAccount"
+          />
+        </div>
+
+        <div class="input-group">
+          <label>Expected Years Invested</label>
+          <input 
+            type="text" 
+            v-model="newAccount.years_growing" 
+            placeholder="Aim for 5+ on riskier investments" 
             @keyup.enter="addAccount"
           />
         </div>
@@ -119,7 +168,7 @@ const addAccount = () => {
         </div>
 
         <div class="card projections-card">
-          <h2>10-Year Projections</h2>
+          <h2>Projections</h2>
           <div class="projection-item">
             <span class="proj-label">Pessimistic (6%)</span>
             <span class="proj-value">£{{ results?.low_total?.toLocaleString() || '0' }}</span>
@@ -133,6 +182,14 @@ const addAccount = () => {
             <span class="proj-value">£{{ results?.high_total?.toLocaleString() || '0' }}</span>
           </div>
         </div>
+
+        <div class="card chart-card" v-if="netWorth.length > 0">
+          <h2>Asset Allocation</h2>
+          <div class="chart-container">
+            <Pie :data="chartData" :options="chartOptions" />
+          </div>
+        </div>
+
       </section>
 
     </main>
@@ -240,6 +297,17 @@ input:focus, select:focus { outline: none; border-color: #2563eb; background-col
   padding: 12px 0;
   border-bottom: 1px solid #f1f5f9;
 }
+
+/* Chart Container */
+.chart-container {
+  position: relative;
+  height: 250px; /* Forces the pie to a nice, compact size */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
 .projection-item:last-child { border-bottom: none; }
 .proj-label { color: #475569; font-size: 14px; }
 .proj-value { font-weight: 600; color: #0f172a; }

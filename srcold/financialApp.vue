@@ -35,6 +35,14 @@ const assetHierarchy = {
   ]
 }
 
+const assetDescriptions = {
+  'ISA': 'Tax-free gains on savings and investments on contributions up to £20,000 per tax year.',
+  'LISA': 'A specific type of ISA (Lifetime ISA) with a 25% government bonus. Used for buying your first home or to be used as a pension as it\'s withdrawable post-60 with no penalty. Maximum allowed contribution of £4,000 and is part of the overall £20,000 ISA allowance.',
+  'Pension': 'Contributed to as a tax-efficient way to set aside funds for later life or retirement.',
+  'Savings/Investments': 'Standard taxable cash accounts and general investments that are NOT wrapped in an ISA',
+  'Property': 'Properties are investments whether intentionally or not and count towards net worth. Should disregard the portion of the property that remains to be on a mortgage for an accurate figure.'
+}
+
 const results = computed(() => growth(netWorth.value))
 const check_bal = computed(() => balance(netWorth.value))
 
@@ -74,7 +82,7 @@ const getAssetClass = (type) => {
 // 3. Dynamic UI Computed Properties
 const balanceLabel = computed(() => {
   if (newAccount.value.type === '9') return 'Current Annual Payout (£)'
-  if (newAccount.value.type === '10') return 'Property Valuation (£)'
+  if (newAccount.value.type === '10') return 'Valuation of Property Owned (£)'
   return 'Current Balance (£)'
 })
 
@@ -207,7 +215,7 @@ const chartOptions = {
           <div class="form-grid">
             
             <div class="input-group">
-              <label>Asset Category</label>
+              <label>Type</label>
               
               <div class="button-grid">
                 <button 
@@ -217,6 +225,13 @@ const chartOptions = {
                   @click.prevent="selectCategory(category)"
                 >
                   {{ category }}
+                  
+                  <span class="info-wrapper" @click.stop>
+                    <span class="info-icon">i</span>
+                    <span class="tooltip-text">
+                      {{ assetDescriptions[category] }}
+                    </span>
+                  </span>
                 </button>
               </div>
 
@@ -472,6 +487,85 @@ input:focus { outline: none; border-color: #2563eb; background-color: #fff; }
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
+  /* Add some right padding if the text gets too close to the icon */
+}
+
+
+
+
+
+/* Position the icon container in the top-right corner of the button */
+.info-wrapper {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  cursor: help;
+  display: inline-block;
+}
+
+/* Style the "i" icon */
+.info-icon {
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-family: serif;
+  font-style: italic;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.info-wrapper:hover .info-icon {
+  background: #007bff; /* Change color on hover */
+}
+
+/* Hide tooltip by default */
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  width: 180px;
+  background-color: #222;
+  color: #fff;
+  text-align: center;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  
+  /* Position tooltip above the icon */
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  
+  /* Prevents accidental hover flickering */
+  pointer-events: none; 
+}
+
+/* Tooltip little bottom arrow */
+.tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #222 transparent transparent transparent;
+}
+
+/* Show tooltip on hover */
+.info-wrapper:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
 }
 
 /* Chart Container */

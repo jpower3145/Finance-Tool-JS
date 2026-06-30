@@ -1,5 +1,6 @@
 ﻿<script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { get, set } from 'idb-keyval'
 import { growth, balance } from './useCalculator'
 
 import AddAssetForm from './components/AddAssetForm.vue'
@@ -9,9 +10,22 @@ import AssetChart from './components/AssetChart.vue'
 
 const netWorth = ref([])
 
+// 1. Pull existing net worth data out of your phone's storage on app load
+onMounted(async () => {
+  const savedLedger = await get('user_net_worth')
+  if (savedLedger) {
+    netWorth.value = savedLedger
+  }
+})
+
+// 2. Automatically save the historical data array locally whenever it's edited
+watch(netWorth, async (newLedger) => {
+  await set('user_net_worth', JSON.parse(JSON.stringify(newLedger)))
+}, { deep: true })
+
 const results = computed(() => {
-  return typeof growth === 'function' 
-    ? growth(netWorth.value) 
+  return typeof growth === 'function'
+    ? growth(netWorth.value)
     : { timeline: [], paths: { low: "", average: "", high: "" }, points: { low: [], average: [], high: [] }, gridLines: [], xLabels: [], viewBox: "0 0 600 300" }
 })
 

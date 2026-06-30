@@ -31,6 +31,10 @@ const results = computed(() => {
 
 const timelineData = computed(() => results.value.timeline || [])
 
+const handleDeleteAsset = (id) => {
+  netWorth.value = netWorth.value.filter(asset => asset.id !== id)
+}
+
 const finalProjection = computed(() => {
   const timeline = timelineData.value
   return (!timeline || timeline.length === 0) ? { low: 0, average: 0, high: 0 } : timeline[timeline.length - 1]
@@ -44,13 +48,17 @@ const handleNewAsset = (asset) => { netWorth.value.push(asset) }
 <template>
   <div class="app-container">
     <header class="app-header">
-      <h1>Financial Projections Dashboard</h1>
+      <h1>UK Net Worth Tracker</h1>
       <a href="/help.html" class="btn-help"><span class="help-icon">?</span> Help Guide</a>
     </header>
     <main class="dashboard-grid">
       <section class="left-panel">
         <AddAssetForm @add-asset="handleNewAsset" />
-        <PortfolioLedger v-if="netWorth.length > 0" :netWorth="netWorth" />
+        <PortfolioLedger 
+          v-if="netWorth.length > 0" 
+          :netWorth="netWorth" 
+          @delete-asset="handleDeleteAsset" 
+        />
       </section>
       <section class="right-panel">
         <NetWorthSummary :results="results" :check_bal="check_bal" />

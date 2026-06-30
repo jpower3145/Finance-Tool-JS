@@ -2,6 +2,16 @@
 import { ref, computed } from 'vue'
 import { assetHierarchy, assetDescriptions, getAccountName, getAssetClass } from '../config/assets'
 
+// Tracks the string name of the active category (e.g., 'Stocks', 'Cash'). 
+// If null, all tooltips are hidden.
+const activeTooltip = ref(null)
+
+function toggleTooltip(category) {
+  // If the clicked tooltip is already open, close it (set to null).
+  // Otherwise, open the one that was clicked.
+  activeTooltip.value = activeTooltip.value === category ? null : category
+}
+
 const emit = defineEmits(['add-asset'])
 
 const newAccount = ref({ type: '', principal: '', contribution: '', years_growing: '' })
@@ -79,9 +89,10 @@ const addAccount = () => {
           >
             {{ category }}
             
-            <span class="info-wrapper" @click.stop>
+            <span class="info-wrapper" @click.stop="toggleTooltip(category)">
               <span class="info-icon">i</span>
-              <span class="tooltip-text">
+              
+              <span v-if="activeTooltip === category" class="tooltip-text">
                 {{ assetDescriptions[category] }}
               </span>
             </span>

@@ -13,8 +13,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'inline',
       manifest: {
-        name: 'Financial Projections Dashboard',
-        short_name: 'FinPro',
+        name: 'Financial Tracking & Projections',
+        short_name: 'UK NetWorth Tracker',
         description: 'Track net worth and financial projections over time',
         theme_color: '#f8fafc',
         background_color: '#f8fafc',
@@ -22,17 +22,17 @@ export default defineConfig({
         orientation: 'portrait',
         icons: [
           {
-            src: 'logo192.png',
+            src: 'logo_192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'logo512.png',
+            src: 'logo_512.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: 'logo512.png',
+            src: 'logo_512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'

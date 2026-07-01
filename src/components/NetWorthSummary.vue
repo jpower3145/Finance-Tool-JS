@@ -33,7 +33,7 @@ defineProps({
           <path :d="results.paths.average" fill="none" stroke="#3b82f6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
           <path :d="results.paths.high" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6" />
 
-          <g v-for="(pt, index) in results.points.high" :key="'high-pt-'+pt.year" class="node-group">
+          <g v-for="(pt, index) in results.points.high" :key="'high-pt-'+pt.year" class="node-group" @touchstart="() => {}" @click="() => {}">
             <circle :cx="pt.x" :cy="pt.y" r="8" fill="#10b981" class="hover-circle" />
             <circle :cx="pt.x" :cy="pt.y" r="3.5" fill="#10b981" stroke="#ffffff" stroke-width="1.5" />
             <g class="tooltip-box">
@@ -42,7 +42,7 @@ defineProps({
             </g>
           </g>
 
-          <g v-for="(pt, index) in results.points.low" :key="'low-pt-'+pt.year" class="node-group">
+          <g v-for="(pt, index) in results.points.low" :key="'low-pt-'+pt.year" class="node-group" @touchstart="() => {}" @click="() => {}">
             <circle :cx="pt.x" :cy="pt.y" r="8" fill="#f43f5e" class="hover-circle" />
             <circle :cx="pt.x" :cy="pt.y" r="3.5" fill="#f43f5e" stroke="#ffffff" stroke-width="1.5" />
             <g class="tooltip-box">
@@ -51,7 +51,7 @@ defineProps({
             </g>
           </g>
 
-          <g v-for="(pt, index) in results.points.average" :key="'avg-pt-'+pt.year" class="node-group">
+          <g v-for="(pt, index) in results.points.average" :key="'avg-pt-'+pt.year" class="node-group" @touchstart="() => {}" @click="() => {}">
             <circle :cx="pt.x" :cy="pt.y" r="10" fill="#3b82f6" class="hover-circle" />
             <circle :cx="pt.x" :cy="pt.y" r="5" fill="#3b82f6" stroke="#ffffff" stroke-width="2" />
             <g class="tooltip-box">

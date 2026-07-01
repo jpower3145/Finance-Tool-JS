@@ -12,7 +12,8 @@ function toggleTooltip(category) {
   activeTooltip.value = activeTooltip.value === category ? null : category
 }
 
-const emit = defineEmits(['add-asset'])
+defineProps({ isAtBottom: Boolean })
+const emit = defineEmits(['add-asset', 'toggle-position'])
 
 const newAccount = ref({ type: '', principal: '', contribution: '', years_growing: '' })
 const selectedCategory = ref('')
@@ -70,11 +71,21 @@ const addAccount = () => {
   newAccount.value.type = ''
   selectedCategory.value = ''
 }
+
 </script>
 
 <template>
   <div class="card form-card">
-    <h2>Add Asset</h2>
+    <div class="form-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h2 style="margin: 0;">Add Asset</h2>
+      <button 
+        class="btn-move" 
+        @click.prevent="$emit('toggle-position')"
+      >
+        {{ isAtBottom ? 'Move to Top' : 'Move to Bottom' }}
+      </button>
+    </div>
+    
     <div class="form-grid">
       
       <div class="input-group">
@@ -84,7 +95,11 @@ const addAccount = () => {
           <button 
             v-for="category in Object.keys(assetHierarchy)" 
             :key="category"
-            :class="['toggle-btn', { active: selectedCategory === category }]"
+            :class="[
+              'toggle-btn', 
+              { active: selectedCategory === category },
+              { 'needs-attention': !selectedCategory }
+            ]"
             @click.prevent="selectCategory(category)"
           >
             {{ category }}
@@ -179,6 +194,9 @@ const addAccount = () => {
 .sub-btn { background-color: #ffffff; }
 .sub-btn.active { background-color: #2563eb; border-color: #2563eb; color: #ffffff; }
 
+.btn-move { background-color: #ffffff; border: 1px solid #cbd5e1; color: #475569; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; } 
+.btn-move:hover { background-color: #f1f5f9; color: #0f172a; border-color: #94a3b8; }
+
 input { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background-color: #f8fafc; transition: border-color 0.2s; }
 input:focus { outline: none; border-color: #2563eb; background-color: #fff; }
 
@@ -191,4 +209,28 @@ input:focus { outline: none; border-color: #2563eb; background-color: #fff; }
 .tooltip-text { visibility: hidden; opacity: 0; width: 180px; background-color: #222; color: #fff; text-align: center; border-radius: 4px; padding: 6px 8px; font-size: 12px; line-height: 1.4; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); z-index: 10; transition: opacity 0.2s ease, visibility 0.2s ease; pointer-events: none; }
 .tooltip-text::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #222 transparent transparent transparent; }
 .info-wrapper:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+/* Define the pulsing animation */
+@keyframes softPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+    transform: scale(1);
+  }
+}
+
+/* Apply it to the class */
+.needs-attention {
+  animation: softPulse 2s infinite;
+  /* Optional: make the border slightly more visible initially */
+  border-color: #94a3b8; 
+}
+
 </style>

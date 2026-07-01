@@ -43,27 +43,53 @@ const finalProjection = computed(() => {
 const check_bal = computed(() => typeof balance === 'function' ? balance(netWorth.value) : 0)
 
 const handleNewAsset = (asset) => { netWorth.value.push(asset) }
+
+const formMovedToRight = ref(false);
+
 </script>
 
 <template>
   <div class="app-container">
     <header class="app-header">
       <h1>UK Net Worth Tracker</h1>
-      <a href="/help.html" class="btn-help"><span class="help-icon">?</span> Help Guide</a>
+      <a href="/help.html" class="btn-help"><span class="help-icon">?</span> Help</a>
     </header>
+    
     <main class="dashboard-grid">
+      
       <section class="left-panel">
-        <AddAssetForm @add-asset="handleNewAsset" />
+        
+        <AddAssetForm 
+          v-if="!formMovedToRight"
+          :isAtBottom="false"
+          @toggle-position="formMovedToRight = true"
+          @add-asset="handleNewAsset" 
+        />
+
         <PortfolioLedger 
           v-if="netWorth.length > 0" 
           :netWorth="netWorth" 
           @delete-asset="handleDeleteAsset" 
         />
+
+        <NetWorthSummary  :check_bal="check_bal" :results="results" />
+
       </section>
+      
       <section class="right-panel">
-        <NetWorthSummary :results="results" :check_bal="check_bal" />
+
         <AssetChart v-if="netWorth.length > 0" :netWorth="netWorth" />
+        
+        <AddAssetForm 
+          v-if="formMovedToRight"
+          :isAtBottom="true"
+          @toggle-position="formMovedToRight = false"
+          @add-asset="handleNewAsset" 
+        />
+
+        
       </section>
+      
     </main>
   </div>
 </template>
